@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+{% block title %}{{ job.title }} · Jobly{% endblock %}
+{% block content %}
+{% set a = kit.analysis if kit else None %}
+{% set busy = kit and kit.status in ('queued', 'running') %}
+<div class="panel">
+  <div class="row" style="align-items:start">
+    <div style="flex:3">
+      <h1 style="margin-bottom:4px">{{ job.title }}</h1>
+      <div class="muted">
+        {{ job.company or 'Unknown company' }}{% if job.location %} · {{ job.location }}{% endif %}{% if job.remote %} · <span class="tag">Remote</span>{% endif %}
+        · found on {{ job.board }} {{ job.discovered_at|ago }}{% if job.posted_at %} · posted {{ job.posted_at|ago }}{% endif %}
+      </div>
+      {% if job.salary %}<div class="small" style="margin-top:4px">💰 {{ job.salary }}</div>{% endif %}
+      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+        {% if job.url|safe_url != '#' %}<a class="btn" href="{{ job.url|safe_url }}" target="_blank" rel="noopener">Open posting ↗</a>{% endif %}
+        {% if job.apply_url|safe_url != '#' %}<a class="btn" href="{{ job.apply_url|safe_url }}" target="_blank" rel="noopener">Apply ↗</a>{% endif %}
+      </div>
+    </div>
+    <div style="flex:1;min-width:200px;text-align:right">
+      <div class="small muted">Quick match</div>
+      <span class="score {{ 'hi' if job.score >= 65 else 'mid' if job.score >= 40 else 'lo' }}" style="font-size:22px">{{ job.score }}</span>
+      {% if a %}<div class="small muted" style="margin-top:6px">AI fit</div><span class="score {{ 'hi' if a.fit_score >= 65 else 'mid' if a.fit_score >= 40 else 'lo' }}" style="font-size:22px">{{ a.fit_score }}</span>{% endif %}
+      <form method="post" action="/jobs/{{ job.id }}/status" style="margin-top:10px">
+        <select name="status" onchange="this.form.submit()">
+          {% for s in statuses %}<option value="{{ s }}" {{ 'selected' if s == job.status }}>{{ s|capitalize }}</option>{% endfor %}
+        </select>
+      </form>
+    </div>
+  </div>
+  {% if job.match_reasons %}<div class="small muted" style="margin-top:10px">{{ job.match_reasons|join(' · ') }}</div>{% endif %}
+</div>
+
+{% if not kit or kit.status == 'error' %}
+<div class="panel">
+  <h2 style="margin-top:0">Application kit</h2>
+  <p class="muted">Claude reads this posting against your profile and writes: a fit analysis (what you have, what's easy to learn, what's a stretch),
+    a tailored resume, a cover letter that shows your passion, work ethic and creativity, and a learning plan.</p>
+  {% if kit and kit.status == 'error' %}<div class="flash err">{{ kit.error }}</div>{% endif %}
+  {% if job.description|length < 200 %}
+    <p class="small">This posting's full description isn't loaded yet. Jobly will try to fetch it — if the site blocks that, paste it below.</p>
+  {% endif %}
+  <form method="post" action="/jobs/{{ job.id }}/kit"><button class="btn primary">✨ Generate application kit</button></form>
+</div>
+{% elif busy %}
+<div class="panel" id="progress">
+  <h2 style="margin-top:0">Writing your application kit…</h2>
+  <p><span id="stage">{{ kit.stage }}</span></p>
+  <p class="small muted">This takes a minute or two. The page updates on its own.</p>
+</div>
+{% endif %}
+
+{% if kit and (kit.analysis or kit.resume) %}
+<div class="tabs">
+  {% for key, label in [('fit','Fit analysis'),('resume','Resume'),('letter','Cover letter'),('plan','Learning plan'),('posting','Posting')] %}
+  <a href="?tab={{ key }}" class="{{ 'on' if tab == key }}">{{ label }}</a>
+  {% endfor %}
+  {% if kit.status == 'done' %}<form method="post" action="/jobs/{{ job.id }}/kit" style="margin-left:auto"><button class="btn small" title="Regenerate everything">↻ Regenerate</button></form>{% endif %}
+</div>
+
+{% if tab == 'fit' and a %}
+  <div class="grid2">
+    <div class="panel"><h3 style="margin-top:0">The role</h3><p>{{ a.role_summary }}</p><p class="muted small">{{ a.company_snapshot }}</p></div>
+    <div class="panel"><h3 style="margin-top:0">Your fit</h3><p>{{ a.fit_summary }}</p></div>
+  </div>
+  {% if kit.resume and kit.resume.added_to_learn %}
+  <div class="panel" style="border-color:var(--warn)">
+    <h3 style="margin-top:0">⚡ Learn before your interview</h3>
+    <p class="small">These are on your tailored resume because you can get interview-ready quickly. Your sprint plan is in the <a href="?tab=plan">Learning plan</a> tab.</p>
+    <p>{% for s in kit.resume.added_to_learn %}<span class="tag learnable">{{ s }}</span> {% endfor %}</p>
+  </div>
+  {% endif %}
+  <div class="panel">
+    <h3 style="margin-top:0">Requirements</h3>
+    <table>
+      <thead><tr><th>Requirement</th><th>You</th><th class="hide-sm">Why / how it transfers</th><th class="hide-sm">Hours</th></tr></thead>
+      <tbody>
+      {% for r in a.requirements|sort(attribute='status') %}
+        <tr>
+          <td><b>{{ r.name }}</b><div class="small muted">{{ r.priority }} · {{ r.category|replace('_',' ') }}</div></td>
+          <td><span class="tag {{ r.status }}">{{ {'have':'have it','learnable':'easy to learn','stretch':'stretch'}[r.status] }}</span></td>
+          <td class="hide-sm small">{{ r.evidence }}{% if r.transferable_from and r.status != 'have' %}<div class="muted">Transfers from: {{ r.transferable_from|join(', ') }}</div>{% endif %}</td>
+          <td class="hide-sm small">{{ r.hours_to_interview_ready or '' }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="grid2">
+    {% if a.concerns %}<div class="panel"><h3 style="margin-top:0">Watch out for</h3><ul class="clean">{% for c in a.concerns %}<li>{{ c }}</li>{% endfor %}</ul></div>{% endif %}
+    <div class="panel"><h3 style="margin-top:0">Likely interview topics</h3><ul class="clean">{% for t in a.interview_topics %}<li>{{ t }}</li>{% endfor %}</ul></div>
+  </div>
+  <div class="panel"><h3 style="margin-top:0">ATS keywords</h3>{% for k in a.ats_keywords %}<span class="tag">{{ k }}</span> {% endfor %}</div>
+
+{% elif tab == 'resume' %}
+  {% if kit.resume %}
+  <div class="row" style="margin-bottom:10px">
+    <div class="muted small">ATS-friendly single column. Download Word to edit, or open the print view and “Save as PDF”.</div>
+    <a class="btn primary" href="/jobs/{{ job.id }}/resume.docx">Download .docx</a>
+    <a class="btn" href="/jobs/{{ job.id }}/resume.html" target="_blank">Print / PDF</a>
+    <a class="btn" href="/jobs/{{ job.id }}/resume.md">Markdown</a>
+  </div>
+  {% if kit.resume.tailoring_notes %}<div class="panel small"><b>What changed:</b><ul class="clean">{% for n in kit.resume.tailoring_notes %}<li>{{ n }}</li>{% endfor %}</ul></div>{% endif %}
+  <iframe class="doc" src="/jobs/{{ job.id }}/resume.html" title="Tailored resume"></iframe>
+  {% else %}<p class="muted">Still writing…</p>{% endif %}
+
+{% elif tab == 'letter' %}
+  {% if kit.cover_letter %}
+  <div class="row" style="margin-bottom:10px">
+    <div></div>
+    <a class="btn primary" href="/jobs/{{ job.id }}/cover-letter.docx">Download .docx</a>
+    <a class="btn" href="/jobs/{{ job.id }}/cover-letter.html" target="_blank">Print / PDF</a>
+    <a class="btn" href="/jobs/{{ job.id }}/cover-letter.txt" target="_blank">Plain text</a>
+  </div>
+  {% if kit.cover_letter.stretch_framing %}<div class="panel small"><b>How the hard requirements were handled:</b><ul class="clean">{% for n in kit.cover_letter.stretch_framing %}<li>{{ n }}</li>{% endfor %}</ul></div>{% endif %}
+  <iframe class="doc" style="height:760px" src="/jobs/{{ job.id }}/cover-letter.html" title="Cover letter"></iframe>
+  {% else %}<p class="muted">Still writing…</p>{% endif %}
+
+{% elif tab == 'plan' %}
+  {% set p = kit.learning_plan %}
+  {% if p %}
+  <div class="row" style="margin-bottom:10px"><p style="flex:3">{{ p.overview }}</p><a class="btn" href="/jobs/{{ job.id }}/learning-plan.md">Download .md</a></div>
+  {% if p.interview_sprint %}
+  <h2>⚡ Interview sprint</h2>
+  {% for it in p.interview_sprint %}
+  <div class="panel">
+    <h3 style="margin-top:0">{{ it.skill }} <span class="tag learnable">~{{ it.hours }}h</span></h3>
+    <p class="small muted">{{ it.why_it_matters }}</p>
+    <div class="grid2">
+      <div><b class="small">Steps</b><ol class="clean small">{% for s in it.steps %}<li>{{ s }}</li>{% endfor %}</ol></div>
+      <div><b class="small">Resources</b><ul class="clean small">{% for r in it.resources %}<li>{% if r.link.lower().startswith('search:') %}{{ r.title }} — <a href="https://www.google.com/search?q={{ r.link[7:]|trim|urlencode }}" target="_blank" rel="noopener">search</a>{% else %}<a href="{{ r.link|safe_url }}" target="_blank" rel="noopener">{{ r.title }}</a>{% endif %} <span class="muted">({{ r.kind }})</span></li>{% endfor %}</ul></div>
+    </div>
+    <p class="small"><b>Mini project:</b> {{ it.mini_project }}</p>
+    <p class="small"><b>Say in the interview:</b></p><ul class="clean small">{% for t in it.talking_points %}<li>{{ t }}</li>{% endfor %}</ul>
+    <p class="small"><b>You're ready when:</b> {{ it.ready_when }}</p>
+  </div>
+  {% endfor %}
+  {% if p.sprint_schedule %}
+  <div class="panel"><h3 style="margin-top:0">Schedule</h3>
+    {% for d in p.sprint_schedule %}<p class="small" style="margin:8px 0 2px"><b>{{ d.label }}</b></p><ul class="clean small">{% for t in d.tasks %}<li>{{ t }}</li>{% endfor %}</ul>{% endfor %}
+  </div>
+  {% endif %}
+  {% endif %}
+  {% if p.long_term %}
+  <h2>🧗 Longer-term (hard skills)</h2>
+  {% for it in p.long_term %}
+  <div class="panel">
+    <h3 style="margin-top:0">{{ it.skill }} <span class="tag stretch">~{{ it.weeks }} weeks</span></h3>
+    <p class="small"><b>How your skills transfer:</b> {{ it.transfer_bridge }}</p>
+    <p class="small"><b>How to talk about it now:</b> {{ it.how_to_frame_it_now }}</p>
+    <div class="grid2">
+      <div><b class="small">Milestones</b><ul class="clean small">{% for m in it.milestones %}<li>{{ m }}</li>{% endfor %}</ul></div>
+      <div><b class="small">Resources</b><ul class="clean small">{% for r in it.resources %}<li>{% if r.link.lower().startswith('search:') %}{{ r.title }} — <a href="https://www.google.com/search?q={{ r.link[7:]|trim|urlencode }}" target="_blank" rel="noopener">search</a>{% else %}<a href="{{ r.link|safe_url }}" target="_blank" rel="noopener">{{ r.title }}</a>{% endif %} <span class="muted">({{ r.kind }})</span></li>{% endfor %}</ul></div>
+    </div>
+    <p class="small"><b>Portfolio project:</b> {{ it.portfolio_project }}</p>
+  </div>
+  {% endfor %}
+  {% endif %}
+  {% if p.interview_framing %}<div class="panel"><h3 style="margin-top:0">Showing adaptability &amp; grit</h3><ul class="clean">{% for t in p.interview_framing %}<li>{{ t }}</li>{% endfor %}</ul></div>{% endif %}
+  {% else %}<p class="muted">Still writing…</p>{% endif %}
+{% endif %}
+{% endif %}
+
+{% if not kit or not (kit.analysis or kit.resume) or tab == 'posting' %}
+<div class="panel">
+  <h2 style="margin-top:0">Job description</h2>
+  {% if job.description %}<div class="desc">{{ job.description }}</div>{% else %}<p class="muted">Not loaded yet.</p>{% endif %}
+  <details style="margin-top:12px" {{ 'open' if job.description|length < 200 }}>
+    <summary class="small">Paste or replace the description</summary>
+    <form method="post" action="/jobs/{{ job.id }}/description">
+      <textarea name="description" placeholder="Paste the full job description here">{{ job.description }}</textarea>
+      <button class="btn" style="margin-top:8px">Save description</button>
+    </form>
+  </details>
+</div>
+{% endif %}
+{% endblock %}
+{% block scripts %}
+{% if busy %}
+<script>
+let seen = {{ ([kit.analysis is not none, kit.resume is not none, kit.cover_letter is not none, kit.learning_plan is not none]|select|list|length) }};
+async function poll() {
+  try {
+    const r = await fetch("/api/jobs/{{ job.id }}/kit");
+    const k = await r.json();
+    document.getElementById("stage").textContent = k.stage || "";
+    if (k.status === "done" || k.status === "error" || k.parts.length !== seen) location.reload();
+  } catch (e) {}
+}
+setInterval(poll, 3000);
+</script>
+{% endif %}
+{% endblock %}

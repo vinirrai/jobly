@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Sources · Jobly{% endblock %}
+{% block content %}
+<h1>Sources</h1>
+<div class="panel">
+  <h2 style="margin-top:0">Watch a company</h2>
+  <p class="muted small">Paste a careers page or job-board link — e.g. <code>stripe.com/jobs</code>, <code>jobs.lever.co/acme</code>,
+    <code>acme.wd5.myworkdayjobs.com/Careers</code>. Jobly detects the system behind it and checks for new postings every few minutes.</p>
+  <form method="post" action="/sources" class="row">
+    <div style="flex:3"><label>Careers page URL</label><input type="text" name="url" required placeholder="https://company.com/careers"></div>
+    <div><label>Keyword filter (optional)</label><input type="text" name="search" placeholder="intern"></div>
+    <button class="btn primary">Watch</button>
+  </form>
+</div>
+
+{% if errors %}<div class="flash err">Some sources in config.yaml couldn't be loaded:<ul class="clean">{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>{% endif %}
+
+<div class="panel" style="padding:4px 12px">
+<table>
+  <thead><tr><th>Source</th><th class="hide-sm">Every</th><th>Last check</th><th class="hide-sm">Listed</th></tr></thead>
+  <tbody>
+  {% for r in rows %}
+  <tr>
+    <td><b>{{ r.board }}</b><div class="small muted" style="word-break:break-all">{{ r.key }}</div></td>
+    <td class="hide-sm small">{{ '%g'|format(r.interval) }} min</td>
+    <td class="small">
+      {% if r.status.last_run %}
+        {% if r.status.last_error %}<span class="tag stretch">error</span> <span class="muted">{{ r.status.last_error }}</span>
+        {% else %}<span class="tag have">ok</span>{% endif %}
+      {% else %}<span class="muted">waiting for first scan</span>{% endif %}
+    </td>
+    <td class="hide-sm small">{{ r.status.last_count if r.status.last_run else '' }}</td>
+  </tr>
+  {% else %}
+  <tr><td colspan="4" class="muted" style="padding:20px 6px">No sources yet. Add a company above, or add sources to <code>{{ config_path }}</code>.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+
+{% if custom %}
+<h2>Companies added here</h2>
+<div class="panel" style="padding:4px 12px">
+<table>
+  {% for id, spec in custom %}
+  <tr><td class="small"><b>{{ spec.type }}</b> · {{ spec.company or spec.url }}{% if spec.search %} · “{{ spec.search }}”{% endif %}</td>
+    <td style="text-align:right"><form method="post" action="/sources/{{ id }}/delete"><button class="btn small">Remove</button></form></td></tr>
+  {% endfor %}
+</table>
+</div>
+{% endif %}
+
+<div class="panel small">
+  <h2 style="margin-top:0">LinkedIn, Indeed, Handshake &amp; Glassdoor</h2>
+  <p>These sites block automated scraping (and their terms forbid it), so Jobly uses two reliable routes instead:</p>
+  <ol class="clean">
+    <li><b>Job-alert emails (instant).</b> Create job alerts on each site, set them to send as soon as jobs are posted, and add an
+      <code>email_alerts</code> source to <code>config.yaml</code> with a Gmail app password. Jobly reads new alerts every 2 minutes and fetches full descriptions when you open a job.</li>
+    <li><b>JSearch API.</b> Searches LinkedIn, Indeed, Glassdoor and ZipRecruiter postings through Google for Jobs. Add a <code>jsearch</code> source with a free RapidAPI key.</li>
+  </ol>
+  <p class="muted">All source types: {{ types|join(', ') }}. See the README for examples.</p>
+</div>
+{% endblock %}

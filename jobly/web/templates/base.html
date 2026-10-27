@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Jobly{% endblock %}</title>
+<style>
+:root {
+  --bg: #f6f7f9; --panel: #ffffff; --text: #16181d; --muted: #5d6472; --line: #e3e6eb;
+  --accent: #2f5bea; --accent-weak: #e8eefe; --good: #137a43; --good-weak: #e3f5ea;
+  --warn: #9a5b00; --warn-weak: #fff3dc; --bad: #b42318; --bad-weak: #fde8e6;
+  --radius: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1115; --panel: #171a21; --text: #e7e9ee; --muted: #9aa2b1; --line: #272b35;
+    --accent: #7c9cff; --accent-weak: #1d2640; --good: #5fd18f; --good-weak: #15291f;
+    --warn: #f0b860; --warn-weak: #2c2214; --bad: #ff8a80; --bad-weak: #2d1715;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+header { background: var(--panel); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; }
+.bar { max-width: 1100px; margin: 0 auto; padding: 10px 16px; display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+.brand { font-weight: 700; font-size: 18px; color: var(--text); }
+nav { display: flex; gap: 14px; flex-wrap: wrap; }
+nav a { color: var(--muted); }
+nav a.on { color: var(--text); font-weight: 600; }
+.pulse { margin-left: auto; font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+.dot.live { background: var(--good); box-shadow: 0 0 0 3px var(--good-weak); }
+main { max-width: 1100px; margin: 0 auto; padding: 20px 16px 60px; }
+h1 { font-size: 24px; margin: 4px 0 14px; }
+h2 { font-size: 18px; margin: 22px 0 10px; }
+h3 { font-size: 15px; margin: 16px 0 6px; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; margin-bottom: 14px; }
+.muted { color: var(--muted); }
+.small { font-size: 13px; }
+.flash { padding: 10px 14px; border-radius: var(--radius); margin-bottom: 14px; }
+.flash.ok { background: var(--good-weak); color: var(--good); }
+.flash.err { background: var(--bad-weak); color: var(--bad); }
+.btn { display: inline-block; border: 1px solid var(--line); background: var(--panel); color: var(--text); padding: 7px 13px; border-radius: 8px; cursor: pointer; font: inherit; font-size: 14px; }
+.btn:hover { border-color: var(--accent); text-decoration: none; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn.small { padding: 4px 9px; font-size: 13px; }
+input[type=text], input[type=url], input[type=number], select, textarea {
+  font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; width: 100%; }
+textarea { min-height: 160px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }
+label { display: block; font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: end; }
+.row > * { flex: 1; min-width: 160px; }
+.row > .btn, .row > form { flex: 0 0 auto; min-width: 0; }
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 12px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); font-weight: 600; }
+.tag { display: inline-block; font-size: 12px; padding: 1px 8px; border-radius: 999px; background: var(--accent-weak); color: var(--accent); white-space: nowrap; }
+.tag.have { background: var(--good-weak); color: var(--good); }
+.tag.learnable { background: var(--warn-weak); color: var(--warn); }
+.tag.stretch { background: var(--bad-weak); color: var(--bad); }
+.score { font-weight: 700; font-variant-numeric: tabular-nums; min-width: 36px; display: inline-block; text-align: center; border-radius: 8px; padding: 2px 6px; }
+.score.hi { background: var(--good-weak); color: var(--good); }
+.score.mid { background: var(--warn-weak); color: var(--warn); }
+.score.lo { background: var(--bg); color: var(--muted); }
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 16px 0; flex-wrap: wrap; }
+.tabs a { padding: 8px 12px; color: var(--muted); border-bottom: 2px solid transparent; }
+.tabs a.on { color: var(--text); border-color: var(--accent); font-weight: 600; }
+.desc { white-space: pre-wrap; font-size: 14px; max-height: 520px; overflow: auto; }
+iframe.doc { width: 100%; height: 900px; border: 1px solid var(--line); border-radius: var(--radius); background: #fff; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 760px) { .grid2 { grid-template-columns: 1fr; } .hide-sm { display: none; } iframe.doc { height: 640px; } }
+.banner { display: none; background: var(--accent); color: #fff; padding: 9px 14px; border-radius: var(--radius); margin-bottom: 14px; cursor: pointer; }
+ul.clean { padding-left: 18px; margin: 6px 0; }
+code { background: var(--bg); padding: 1px 5px; border-radius: 5px; font-size: 13px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <a class="brand" href="/">Jobly</a>
+    <nav>
+      {% set p = request.url.path %}
+      <a href="/" class="{{ 'on' if p == '/' or p.startswith('/jobs') }}">Jobs</a>
+      <a href="/add" class="{{ 'on' if p == '/add' }}">Add job</a>
+      <a href="/sources" class="{{ 'on' if p == '/sources' }}">Sources</a>
+      <a href="/skills" class="{{ 'on' if p == '/skills' }}">Skill gaps</a>
+      <a href="/profile" class="{{ 'on' if p == '/profile' }}">Profile</a>
+    </nav>
+    <span class="pulse"><span class="dot {{ 'live' if scout_running }}"></span>{{ 'Scouting live' if scout_running else 'Scout paused' }}</span>
+  </div>
+</header>
+<main>
+  {% if msg %}<div class="flash ok">{{ msg }}</div>{% endif %}
+  {% if err %}<div class="flash err">{{ err }}</div>{% endif %}
+  {% block content %}{% endblock %}
+</main>
+{% block scripts %}{% endblock %}
+</body>
+</html>

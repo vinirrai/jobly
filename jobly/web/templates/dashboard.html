@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Jobs · Jobly{% endblock %}
+{% block content %}
+{% if not has_profile %}
+<div class="panel">
+  <b>Start here:</b> add your profile (your master resume) so Jobly can score jobs and tailor applications.
+  <a class="btn primary small" href="/profile">Set up profile</a>
+</div>
+{% endif %}
+{% if source_count == 0 %}
+<div class="panel">
+  <b>No sources yet.</b> Add companies you'd love to work at, or connect your job-alert emails (LinkedIn, Indeed, Handshake).
+  <a class="btn small" href="/sources">Add sources</a>
+</div>
+{% endif %}
+
+<div id="banner" class="banner" onclick="location.reload()"></div>
+
+<div class="row" style="margin-bottom:12px;align-items:center">
+  <h1 style="flex:1;margin:0">Jobs</h1>
+  <form method="post" action="/scan"><button class="btn">Scan now</button></form>
+  <a class="btn primary" href="/add">Add a job</a>
+</div>
+
+<form class="panel row" method="get" action="/">
+  <div><label>Search</label><input type="text" name="q" value="{{ q }}" placeholder="title, company, skill…"></div>
+  <div><label>Status</label>
+    <select name="status">
+      <option value="">All active</option>
+      {% for s in statuses %}<option value="{{ s }}" {{ 'selected' if s == status }}>{{ s|capitalize }} ({{ counts.get(s, 0) }})</option>{% endfor %}
+    </select>
+  </div>
+  <div><label>Min match</label><input type="number" name="min_score" min="0" max="100" value="{{ min_score or '' }}"></div>
+  <button class="btn">Filter</button>
+</form>
+
+<div class="panel" style="padding:4px 12px">
+<table>
+  <thead><tr><th>Match</th><th>Role</th><th class="hide-sm">Found</th><th class="hide-sm">Status</th></tr></thead>
+  <tbody>
+  {% for j in jobs %}
+  <tr>
+    <td><span class="score {{ 'hi' if j.score >= 65 else 'mid' if j.score >= 40 else 'lo' }}">{{ j.score }}</span></td>
+    <td>
+      <a href="/jobs/{{ j.id }}"><b>{{ j.title }}</b></a>
+      <div class="small muted">
+        {{ j.company or 'Unknown company' }}{% if j.location %} · {{ j.location }}{% endif %}{% if j.remote %} · <span class="tag">Remote</span>{% endif %}
+        · {{ j.board }}{% if j.salary %} · {{ j.salary }}{% endif %}
+        {% if j.kit_status == 'done' %} · <span class="tag have">Kit ready</span>{% elif j.kit_status in ('queued','running') %} · <span class="tag learnable">Writing…</span>{% endif %}
+      </div>
+    </td>
+    <td class="hide-sm small muted">{{ j.discovered_at|ago }}{% if j.posted_at %}<br>posted {{ j.posted_at|ago }}{% endif %}</td>
+    <td class="hide-sm">
+      <form method="post" action="/jobs/{{ j.id }}/status" style="display:flex;gap:4px">
+        <input type="hidden" name="back" value="{{ request.url.path }}?{{ request.url.query }}">
+        {% if j.status != 'saved' %}<button class="btn small" name="status" value="saved" title="Save">★</button>{% endif %}
+        {% if j.status != 'dismissed' %}<button class="btn small" name="status" value="dismissed" title="Not interested">✕</button>{% endif %}
+        <span class="small muted" style="align-self:center">{{ j.status }}</span>
+      </form>
+    </td>
+  </tr>
+  {% else %}
+  <tr><td colspan="4" class="muted" style="padding:24px 6px">No jobs yet. Add sources, then press <b>Scan now</b>.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const since = {{ now|tojson }};
+async function poll() {
+  try {
+    const r = await fetch("/api/new-count?since=" + encodeURIComponent(since));
+    const { count } = await r.json();
+    if (count > 0) {
+      const b = document.getElementById("banner");
+      b.textContent = `${count} new job${count === 1 ? "" : "s"} found — click to refresh`;
+      b.style.display = "block";
+    }
+  } catch (e) {}
+}
+setInterval(poll, 20000);
+</script>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Skill gaps · Jobly{% endblock %}
+{% block content %}
+<h1>Skill gaps</h1>
+<p class="muted">Across the {{ analyzed }} job{{ '' if analyzed == 1 else 's' }} you've generated kits for: the skills employers keep asking for that you don't have yet.
+  Learning the top few unlocks the most jobs.</p>
+{% if rows %}
+<div class="panel" style="padding:4px 12px">
+<table>
+  <thead><tr><th>Skill</th><th>Jobs asking</th><th>Your status</th><th class="hide-sm">Avg. hours to interview-ready</th></tr></thead>
+  <tbody>
+  {% for r in rows %}
+  <tr>
+    <td><b>{{ r.name }}</b>{% if r.required %}<div class="small muted">required in {{ r.required }}</div>{% endif %}</td>
+    <td>{{ r.jobs|length }}</td>
+    <td>
+      {% if r.have %}<span class="tag have">have ×{{ r.have }}</span>{% endif %}
+      {% if r.learnable %}<span class="tag learnable">easy to learn ×{{ r.learnable }}</span>{% endif %}
+      {% if r.stretch %}<span class="tag stretch">stretch ×{{ r.stretch }}</span>{% endif %}
+    </td>
+    <td class="hide-sm">{{ r.avg_hours or '' }}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<div class="panel muted">Generate an application kit for a few jobs and your skill-gap ranking will appear here.</div>
+{% endif %}
+{% endblock %}

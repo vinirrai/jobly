@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jobly"
+version = "0.1.0"
+description = "Real-time job scout that tailors your resume, cover letter and learning plan for every posting."
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.10"
+dependencies = [
+    "anthropic>=2.3",
+    "beautifulsoup4>=4.12",
+    "fastapi>=0.110",
+    "httpx>=0.27",
+    "jinja2>=3.1",
+    "pydantic>=2.6",
+    "python-docx>=1.1",
+    "python-multipart>=0.0.9",
+    "pyyaml>=6.0",
+    "uvicorn>=0.29",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "respx>=0.21"]
+
+[project.scripts]
+jobly = "jobly.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["jobly*"]
+
+[tool.setuptools.package-data]
+jobly = ["data/*.yaml", "web/templates/*.html"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

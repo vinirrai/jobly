@@ -1,0 +1,99 @@
+# Jobly configuration.
+# Values like ${NAME} are read from environment variables, so secrets stay out of this file.
+
+scout:
+  enabled: true
+  default_interval_minutes: 10   # how often each source is checked (sources can override)
+  max_workers: 4
+  first_run_alert_hours: 24      # first scan of a new source only alerts for jobs posted this recently
+
+# Which jobs you want. Jobs that fail these filters are never stored.
+search:
+  titles_include:                # a job title must contain at least one of these (empty = any title)
+    - intern
+    - new grad
+    - junior
+    - entry level
+    - associate
+    - software engineer
+    - data analyst
+  titles_exclude: [senior, sr., staff, principal, lead, manager, director, head of, vp]
+  keywords: [python, sql]        # bump the match score when the posting mentions these
+  locations: [remote, new york, nyc, boston, san francisco]   # empty = anywhere
+  remote_ok: true
+  max_age_days: 30
+  min_score: 0                   # hide jobs scoring below this (0-100)
+
+# Instant alerts for new matches. Use any combination.
+notify:
+  min_score: 40
+  # Free phone push: install the ntfy app, subscribe to a hard-to-guess topic name, put it here.
+  ntfy_topic: ${JOBLY_NTFY_TOPIC:-}
+  ntfy_server: https://ntfy.sh
+  # Slack or Discord incoming-webhook URL
+  webhook_url: ${JOBLY_WEBHOOK_URL:-}
+  email:
+    smtp_host: ""                # e.g. smtp.gmail.com
+    smtp_port: 587
+    username: ""
+    password: ${JOBLY_SMTP_PASSWORD:-}
+    to: ""
+
+ai:
+  model: claude-opus-5-5         # needs ANTHROPIC_API_KEY in your environment
+  effort: high                   # low | medium | high | xhigh | max (higher = better writing, more cost)
+  auto_tailor_min_score: 0       # e.g. 70 = automatically write a kit for every new job scoring 70+
+  max_parallel_kits: 2
+
+# Where to look. Every entry can also take `interval_minutes:` and `enabled: false`.
+# You can add companies from the Sources page in the app too.
+sources:
+  # --- Company career sites (public ATS APIs: fast and reliable) ---
+  - type: greenhouse             # boards.greenhouse.io/<company>
+    company: stripe
+  - type: greenhouse
+    company: figma
+  - type: lever                  # jobs.lever.co/<company>
+    company: palantir
+  - type: ashby                  # jobs.ashbyhq.com/<company>
+    company: ramp
+  # - type: workday              # any *.myworkdayjobs.com career site
+  #   url: https://nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite
+  #   search: intern
+  # - type: smartrecruiters      # jobs.smartrecruiters.com/<company>
+  #   company: Visa
+  # - type: careers_page         # any careers page; Jobly detects the system behind it
+  #   url: https://www.example.com/careers
+
+  # --- LinkedIn / Indeed / Handshake / Glassdoor via your job-alert emails (near-instant) ---
+  # Turn on job alerts on each site, then use a Gmail app password:
+  # Google Account -> Security -> 2-Step Verification -> App passwords.
+  # - type: email_alerts
+  #   host: imap.gmail.com
+  #   username: you@gmail.com
+  #   password: ${JOBLY_IMAP_PASSWORD}
+  #   folder: INBOX
+  #   lookback_days: 3
+
+  # --- LinkedIn, Indeed, Glassdoor & ZipRecruiter search through Google for Jobs ---
+  # Free key: rapidapi.com -> "JSearch" API -> subscribe to the Basic plan.
+  # - type: jsearch
+  #   query: software engineer intern in New York
+  #   api_key: ${RAPIDAPI_KEY}
+  #   date_posted: today         # all | today | 3days | week | month
+  #   interval_minutes: 60
+
+  # --- Free remote / startup boards ---
+  - type: remotive
+    search: python
+  - type: hn_hiring              # monthly "Ask HN: Who is hiring?" thread — lots of startups
+  # - type: remoteok
+  #   tags: [python]
+  # - type: rss
+  #   url: https://weworkremotely.com/categories/remote-programming-jobs.rss
+  #   label: We Work Remotely
+  # - type: adzuna               # free key at developer.adzuna.com
+  #   what: junior data analyst
+  #   where: new york
+  #   app_id: ${ADZUNA_APP_ID}
+  #   app_key: ${ADZUNA_APP_KEY}

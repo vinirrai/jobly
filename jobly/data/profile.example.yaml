@@ -1,0 +1,85 @@
+# Your master resume. Replace this example with your own details
+# (or use "Import your current resume" on the Profile page).
+# Everything Jobly writes is built only from what's in here, so be complete and specific.
+
+name: Alex Rivera
+email: alex.rivera@example.com
+phone: "(555) 010-2030"
+location: New York, NY
+links:
+  linkedin: linkedin.com/in/alexrivera
+  github: github.com/alexrivera
+
+headline: Computer Science student who ships data-driven products
+summary: >
+  CS junior with internship experience building Python data pipelines and React dashboards.
+  Learns new tools fast and likes owning problems end to end.
+
+skills:
+  - {name: Python, level: advanced}
+  - {name: SQL, level: intermediate}
+  - {name: JavaScript, level: intermediate}
+  - {name: React, level: intermediate}
+  - {name: pandas, level: intermediate}
+  - {name: Git, level: intermediate}
+  - {name: Excel, level: advanced}
+
+experience:
+  - company: Brightline Analytics
+    title: Software Engineering Intern
+    location: New York, NY
+    start: Jun 2025
+    end: Aug 2025
+    bullets:
+      - Built a Python ETL pipeline that pulled data from 3 internal APIs into PostgreSQL, cutting weekly reporting time from 6 hours to 20 minutes
+      - Created a React dashboard used by 40+ account managers to track client health scores
+      - Wrote unit tests that raised coverage of the reporting service from 35% to 80%
+  - company: Campus Tech Help Desk
+    title: Student IT Assistant
+    location: New York, NY
+    start: Sep 2023
+    end: present
+    bullets:
+      - Resolve 25+ hardware and software tickets a week for students and faculty
+      - Wrote a troubleshooting guide that reduced repeat tickets by 30%
+
+projects:
+  - name: StudySpot
+    link: github.com/alexrivera/studyspot
+    tech: [React, Node.js, Firebase]
+    bullets:
+      - Real-time map of open study rooms on campus; 600 weekly active users in its first semester
+      - Designed the crowd-sourced check-in system that keeps room status accurate without sensors
+
+education:
+  - school: City University of New York
+    degree: B.S.
+    field: Computer Science
+    start: Sep 2023
+    end: May 2027
+    gpa: "3.7"
+    coursework: [Data Structures, Algorithms, Databases, Operating Systems, Statistics, Machine Learning]
+    honors: [Dean's List (4 semesters)]
+
+certifications: []
+awards: [1st place, CUNY Hackathon 2024]
+
+# Short TRUE stories the cover letter can use to show grit, work ethic, adaptability and creativity.
+stories:
+  - Taught myself React in three weeks so I could take over the internship dashboard project when a teammate left mid-summer.
+  - Worked 20 hours a week at the help desk throughout college while keeping a 3.7 GPA.
+  - Rebuilt StudySpot's backend twice after scaling problems during finals week instead of giving up on it.
+
+motivations:
+  - Building tools people use every day
+  - Turning messy data into decisions
+
+preferences:
+  # How skills that are easy-to-moderate to learn appear on tailored resumes:
+  #   list     -> in your Skills section (learn them before the interview; a sprint plan is generated)
+  #   learning -> under "Currently learning"
+  #   off      -> left off (still in your learning plan)
+  learnable_skills_mode: list
+  learning_hours_per_week: 10
+  cover_letter_tone: warm, confident and specific
+  resume_pages: 1

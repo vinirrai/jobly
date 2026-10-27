@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Add a job · Jobly{% endblock %}
+{% block content %}
+<h1>Add a job</h1>
+<div class="panel">
+  <h2 style="margin-top:0">From a link</h2>
+  <p class="muted small">Works with company career pages (Greenhouse, Lever, Ashby, Workday, SmartRecruiters and any site that publishes job data),
+    LinkedIn job links, and most job boards. Handshake and some boards need a login — paste those below instead.</p>
+  <form method="post" action="/add/url" class="row">
+    <div><input type="url" name="url" required placeholder="https://jobs.lever.co/acme/… or https://www.linkedin.com/jobs/view/…"></div>
+    <button class="btn primary">Import</button>
+  </form>
+</div>
+<div class="panel">
+  <h2 style="margin-top:0">Paste it</h2>
+  <form method="post" action="/add/manual">
+    <div class="row">
+      <div><label>Job title</label><input type="text" name="title" required></div>
+      <div><label>Company</label><input type="text" name="company"></div>
+      <div><label>Location</label><input type="text" name="location"></div>
+    </div>
+    <label>Link (optional)</label><input type="url" name="url" placeholder="https://…">
+    <label>Full job description</label><textarea name="description" required style="min-height:260px"></textarea>
+    <button class="btn primary" style="margin-top:10px">Add job</button>
+  </form>
+</div>
+{% endblock %}

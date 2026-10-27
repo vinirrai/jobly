@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Profile · Jobly{% endblock %}
+{% block content %}
+<h1>Your profile</h1>
+<p class="muted">This is your master resume. Every tailored resume and cover letter is built only from what's here — so the more complete
+  and specific it is (numbers, tools, real stories), the better your applications.</p>
+
+<div class="panel">
+  <h2 style="margin-top:0">Import your current resume</h2>
+  <p class="small muted">Upload a PDF, Word (.docx) or text resume and Claude will fill in the profile below for you to review.
+    {% if exists %}Your current profile is backed up first.{% endif %}</p>
+  <form method="post" action="/profile/import" enctype="multipart/form-data" class="row">
+    <div><input type="file" name="file" accept=".pdf,.docx,.txt,.md" required></div>
+    <button class="btn">Import</button>
+  </form>
+</div>
+
+<div class="panel">
+  <div class="row"><h2 style="margin:0">{{ 'Edit profile' if exists else 'Create your profile (example below)' }}</h2></div>
+  <p class="small muted">YAML format. Saved to <code>{{ path }}</code>.</p>
+  <ul class="small clean">
+    <li><b>stories</b> — short true stories showing grit, fast learning, hard work or creativity. The cover letter uses these to prove your work ethic and adaptability.</li>
+    <li><b>preferences.learnable_skills_mode</b> — <code>list</code> puts easy-to-learn skills straight into your Skills section (then learn them before the interview),
+      <code>learning</code> lists them as “Currently learning”, <code>off</code> leaves them off.</li>
+  </ul>
+  <form method="post" action="/profile">
+    <textarea name="text" style="min-height:620px" spellcheck="false">{{ text }}</textarea>
+    <button class="btn primary" style="margin-top:10px">Save profile</button>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+# Personal data: never commit your profile, keys or generated documents
+jobly_data/
+.env
+*.db

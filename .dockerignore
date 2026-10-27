@@ -1,0 +1,6 @@
+.venv
+.git
+jobly_data
+tests
+**/__pycache__
+.env
